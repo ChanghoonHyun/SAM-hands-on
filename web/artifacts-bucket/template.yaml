@@ -1,0 +1,23 @@
+Description: artifacts bucket
+Resources:
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Description: app artifacts
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub serverless-hands-on-artifacts-${AWS::AccountId}-${AWS::Region}
+      VersioningConfiguration:
+        Status: Enabled
+  ArtifactsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactsBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+            Resource: !Sub 'arn:aws:s3:::${ArtifactsBucket}/*'
+            Principal:
+              Service: s3.amazonaws.com

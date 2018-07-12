@@ -1,0 +1,26 @@
+Description: static web site template
+Resources:
+  WebBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub serverless-hands-on-static-web-${AWS::AccountId}-${AWS::Region}
+      WebsiteConfiguration:
+        # 웹사이트로 접근시 index.html에 접근합니다.
+        IndexDocument: index.html
+  WebBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            # 보안 주체 (ex 사용자, 계정, 서비스 등)
+            Principal: "*"
+            # 작업 권한
+            Action: s3:GetObject
+            # 리소스
+            Resource: !Sub "arn:aws:s3:::${WebBucket}/*"
+Outputs:
+  WebUrl:
+    Description: Static Web endpoint URL
+    Value: !Sub serverless-hands-on-static-web-${AWS::AccountId}-${AWS::Region}.s3-website.${AWS::Region}.amazonaws.com

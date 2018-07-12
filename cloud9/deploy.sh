@@ -1,0 +1,1 @@
+aws cloudformation deploy --template-file ./template.yaml --stack-name hands-on-c9 --capabilities CAPABILITY_IAM --parameter-overrides AppName=serverless-hands-on --region=ap-southeast-1

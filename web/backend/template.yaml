@@ -1,0 +1,225 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >-
+  serverless-hands-on-server-template
+Parameters:
+  LambdaAlias:
+    Type: String
+    Default: live
+  StageName:
+    Type: String
+    Default: test  
+  APIGName:
+    Type: String
+    Description: API Gateway Name
+    Default: HandsOnAPIG  
+#   https://docs.aws.amazon.com/ko_kr/codedeploy/latest/userguide/deployment-configurations.html
+  DeploymentType:
+    Type: String
+    Default: AllAtOnce
+    AllowedValues:
+      - Canary10Percent30Minutes
+      - Canary10Percent5Minutes
+      - Canary10Percent10Minutes
+      - Canary10Percent15Minutes
+      - AllAtOnce
+      - Linear10PercentEvery10Minutes
+      - Linear10PercentEvery1Minute
+      - Linear10PercentEvery2Minutes
+      - Linear10PercentEvery3Minutes    
+  Email:
+    Type: String
+    Description: Email to subscribe to sns
+  UsersTableName:
+    Type: String
+    Description: Table name of Users
+    Default: Hands_On_Users
+Resources:
+  UsersApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Ref APIGName
+      StageName: !Ref StageName
+      DefinitionBody:
+        swagger: "2.0"
+        paths:
+          "/users":
+            options:
+              summary: CORS support
+              description: |
+                Enable CORS by returning correct headers
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: |
+                    {
+                      "statusCode" : 200
+                    }
+                responses:
+                  "default":
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers : "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+                      method.response.header.Access-Control-Allow-Methods : "'*'"
+                      method.response.header.Access-Control-Allow-Origin : "'*'"
+                    responseTemplates:
+                      application/json: |
+                        {}
+              responses:
+                "200":
+                  description: Default response for CORS method
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: "string"
+                    Access-Control-Allow-Methods:
+                      type: "string"
+                    Access-Control-Allow-Origin:
+                      type: "string"
+            get:
+              responses:
+                "200":
+                  content:
+                    text/plain:
+                      scheme:
+                        $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UsersFunction.Arn}:${LambdaAlias}/invocations"                        
+            post:
+              responses:
+                "200":
+                  content:
+                    text/plain:
+                      scheme:
+                        type: string
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UsersFunction.Arn}:${LambdaAlias}/invocations"                          
+  UsersFunction:                        
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: index.handler
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 10
+      Tracing: Active
+      AutoPublishAlias: !Ref LambdaAlias
+      Environment:
+        Variables:
+          tableName: !Ref UsersTableName
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSXrayWriteOnlyAccess
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Scan
+              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${UsersTableName}
+      Events:
+        UsersGet:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: GET
+            RestApiId: !Ref UsersApi
+        UsersPost:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
+            RestApiId: !Ref UsersApi
+      DeploymentPreference:
+        Type: !Ref DeploymentType
+        Alarms:
+          - LambdaAliasErrorMetricGreaterThanZeroAlarm
+          - LambdaErrorMetricGreaterThanZeroAlarm
+  PermissionForAPIGatewayToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - UsersFunction
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName: !Ref UsersFunction.Alias
+      Principal: apigateway.amazonaws.com
+  ApiDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Ref APIGName
+      DashboardBody: !Sub '{"widgets":[{"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"metrics":[["AWS/ApiGateway","5XXError","ApiName","${APIGName}"]],"period":300,"stat":"Sum","region":"${AWS::Region}","title":"5xx error metric"}}, {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"metrics":[["AWS/ApiGateway","Latency","ApiName","${APIGName}"]],"period":300,"stat":"Sum","region":"${AWS::Region}","title":"Latency metric"}}]}'      
+  UsersFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: UsersFunction
+    Properties:
+      RetentionInDays: 180
+      LogGroupName: !Sub /aws/lambda/${UsersFunction}
+  SnsForAlarm:
+    Type: AWS::SNS::Topic
+    Description: notify to app manager
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+  LambdaAliasErrorMetricGreaterThanZeroAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${UsersFunction}:${StageName}"
+        - Name: FunctionName
+          Value: !Ref UsersFunction
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      AlarmActions:
+        - !Ref SnsForAlarm
+  LambdaErrorMetricGreaterThanZeroAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Ref UsersFunction
+        - Name: FunctionName
+          Value: !Ref UsersFunction
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+      AlarmActions:
+        - !Ref SnsForAlarm
+  UsersTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Ref UsersTableName
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${UsersApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}

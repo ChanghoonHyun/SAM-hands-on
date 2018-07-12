@@ -1,0 +1,2 @@
+aws cloudformation package --template template.yaml --s3-bucket $1 --output-template packaged.yaml --region=ap-southeast-1
+aws cloudformation deploy --region ap-southeast-1 --template-file ./packaged.yaml --stack-name serverless-hands-on-api-server --capabilities CAPABILITY_NAMED_IAM --parameter-overrides Email=$2 && rm -f packaged.yaml
