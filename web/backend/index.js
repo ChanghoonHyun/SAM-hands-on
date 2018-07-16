@@ -4,15 +4,11 @@ const rules = {
     "default": { "fixed_target": 1, "rate": 1 },
     "version": 1
 };
-// const logger = require('winston');
-
-// AWSXRay.setLogger(logger);
-AWSXRay.config([
-    AWSXRay.plugins.EC2Plugin
-]);
 AWSXRay.middleware.setSamplingRules(rules);
 
 const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+
+// TODO: 이건 핸즈온때 제거
 AWS.config.update({
     region: 'ap-southeast-1'
 });
@@ -50,7 +46,6 @@ exports.handler = (event, context, callback) => {
                     body: JSON.stringify(data),
                     headers
                 }];
-            console.log(result);
             callback(...result);
         });
     } else if (event.httpMethod == 'POST') {
@@ -68,7 +63,6 @@ exports.handler = (event, context, callback) => {
                     statusCode: 201,
                     headers
                 }];
-            console.log(result);
             callback(...result);
         });
 

@@ -4,13 +4,30 @@
 
 어플리케이션의 성능, 동작 등을 추적 할 수 있는 프로파일 도구입니다.
 시각화, 상세 도표 등을 제공하고 검색이 가능합니다.
+트레이스 데이터는 30일간 저장이 가능합니다.
 ![x-ray-summary1](/web/monitoring/images/x-ray-summary1.png)
 ![x-ray-summary2](/web/monitoring/images/x-ray-summary2.png)
 [출처 : 윤석찬님의 AWS X-Ray를 통한 서버리스 분산 애플리케이션 추적하기](https://www.youtube.com/watch?v=BEg__eV1mT8)
 
-Lambda에서는 X-Ray Daemon이 기본적으로 내장 돼있으며 Trace 옵션을 이용해서 X-Ray Daemon을 활성화 시킬 수 있습니다.
+- X-Ray Daemon
+  - X-Ray SDK를 통해서 전달된 내용을 정리해서 AWS X-Ray로 전송
+  - Lambda에서는 X-Ray Daemon이 기본적으로 내장 돼있으며 Trace 옵션을 이용해서 X-Ray Daemon을 활성화 시킬 수 있습니다.
+- Segments
+  - 요청, 응답 정보 기록
+  - 시작, 종료시간 기록
+  - 에러 스택 기록
+  - SubSegments 기록
+- SubSegments
+  - AWS Clients, 외부 API, 임의의 메소드 등의 정보를 기록
+- Annotations
+  - X-Ray에서 인덱싱 돼서 필터 표현식을 사용 할 수 있는 필드
+- MetaData
+  - X-Ray에서 인덱싱 되지 않는 세그먼트의 데이터
 
-[web/backend/template.yaml](../backend/template.yaml)
+
+### backend/index.js의 X-Ray 사용
+
+1. Lambda에서 Tracing을 활성화 합니다.
 ```yaml
   UsersFunction:                        
     Type: AWS::Serverless::Function
@@ -19,6 +36,123 @@ Lambda에서는 X-Ray Daemon이 기본적으로 내장 돼있으며 Trace 옵션
       Tracing: Active
 ``` 
 
+2. aws-xray-sdk를 import해서 X-Ray의 SamplingRules를 셋팅합니다.
+  - 본 예제에서는 X-Ray 동작 확인을 위해서 샘플링 비율을 1로 했습니다. 실제로 사용할 때는 적절한 샘플링 비율을 선택해주세요.
 
+```javascript
+const AWSXRay = require('aws-xray-sdk');
+const rules = {
+    "rules": [{ "description": "users", "service_name": "*", "http_method": "*", "url_path": "/users/*", "fixed_target": 0, "rate": 1 }],
+    "default": { "fixed_target": 1, "rate": 1 },
+    "version": 1
+};
+AWSXRay.middleware.setSamplingRules(rules);
+```
+
+3. aws-sdk의 모든 클라이언트를 X-Ray가 추적 가능하도록 wrapping합니다.
+
+```javascript
+const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+```    
+
+4. SubSegment를 생성해서 annotation과 metadata를 추가합니다.
+
+```javascript
+    const initSubSegment = (subsegment) => {
+        subsegment.addAnnotation('functionVersion', context.functionVersion);
+        subsegment.addMetadata('meta', context.awsRequestId);
+    };
+    AWSXRay.captureFunc('annotations', initSubSegment);
+```
+
+### X-Ray Service Map 확인하기
+
+- [aws console](https://ap-southeast-1.console.aws.amazon.com/xray/home?region=ap-southeast-1#/service-map?timeRange=PT6H)로 이동
+  ![x-ray-service-map-1](/web/monitoring/images/x-ray-service-map-1.png)
+  ![x-ray-service-map-2](/web/monitoring/images/x-ray-service-map-2.png)
+  - error: 클라이언트 오류(4xx)
+  - fault: 서버 오류(5xx)
+  - throttle: 요청 과다로 인한 제한(429)
+
+### X-Ray Traces 확인하기
+  - [aws console](https://ap-southeast-1.console.aws.amazon.com/xray/home?region=ap-southeast-1#/traces?timeRange=PT6H)로 이동
+  ![x-ray-traces-1](/web/monitoring/images/x-ray-traces-1.png)
+  ![x-ray-traces-2](/web/monitoring/images/x-ray-traces-2.png)  
+
+## CloudWatch Metrics
+  - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-southeast-1#dashboards:name=HandsOnAPIG)로 이동
+  - 5xx와 Latency에 대한 Metrics를 대시보드로 만들었습니다.
+
+### API Gateway Metrics
+  - 4XXError
+  - 5XXError
+  - CacheHitCount
+  - CacheMissCount
+  - Count
+  - IntegrationLatency
+  - Latency
+
+### 그 외의 Metrics 정보
+  - [리소스별 Metrics](https://docs.aws.amazon.com/ko_kr/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)
+  - [Custom Metrics](https://aws.amazon.com/ko/blogs/korea/amazon-cloudwatch-custom-metrics/)
+
+### template
+```yaml
+  ApiDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Ref APIGName
+      DashboardBody: !Sub '
+      {
+        "widgets":[
+          {
+            "type":"metric",
+            "x":0,
+            "y":0,
+            "width":12,
+            "height":6,
+            "properties":{
+              "metrics":[
+                [
+                  "AWS/ApiGateway",
+                  "5XXError",
+                  "ApiName",
+                  "${APIGName}"
+                ]
+              ],
+              "period":300,
+              "stat":"Sum",
+              "region":"${AWS::Region}",
+              "title":"5xx error metric"
+            }
+          },
+          {
+            "type":"metric",
+            "x":0,
+            "y":0,
+            "width":12,
+            "height":6,
+            "properties": {
+              "metrics":[
+                [
+                  "AWS/ApiGateway",
+                  "Latency",
+                  "ApiName",
+                  "${APIGName}"
+                ]
+              ],
+              "period":300,
+              "stat":"Sum",
+              "region":"${AWS::Region}",
+              "title":"Latency metric"
+            }
+          }
+        ]
+      }'
+```
+
+## CloudWatch Alarm
+
+  - 
 
 - [?](../)
