@@ -138,18 +138,15 @@ Resources:
           phases:
             install:
               commands:
-                - pwd
                 - printenv
                 - cd ./web/backend
                 - npm install aws-xray-sdk
             build:
               commands:
-                - pwd
                 - aws cloudformation package --template template.yaml --s3-bucket ${ArtifactBucketName} --output-template packaged.yaml --region=${Region}
-                - ls
           artifacts: 
             files:
-              - packaged.yaml
+              - ./web/backend/packaged.yaml
       TimeoutInMinutes: 15
       Tags:
         - Key: Name
@@ -273,7 +270,7 @@ Resources:
                 RoleArn: !GetAtt CodeDeployRole.Arn
                 ChangeSetName: pipeline-changeset
                 Capabilities: CAPABILITY_NAMED_IAM
-                TemplatePath: !Sub '${ServiceName}-BuildArtifact::${PackagedFile}'
+                TemplatePath: !Sub '${ServiceName}-BuildArtifact::web/backend/${PackagedFile}'
                 ParameterOverrides: !Sub '{"Email" : "${Email}"}'
               RunOrder: 1
             - Name: execute-changeset
