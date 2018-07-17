@@ -1,0 +1,296 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: pipeline for Lambda and API Gateway
+Parameters:
+  ServiceName:
+    Type: String
+    Default: serverless-hands-on-api-server
+  CodeBuildImage:
+    Type: String
+    Default: 'aws/codebuild/nodejs:7.0.0'
+    Description: Image used for CodeBuild project.
+  PackagedFile:
+    Type: String
+    Description: The filename for the output file from the buildspec file.
+    Default: packaged.yaml    
+  ArtifactBucketName:
+    Type: String
+  Email:
+    Type: String    
+  GitHubRepo:
+    Type: String
+    Default: SAM-hands-on
+  GitHubOwner:
+    Type: String
+    Default: ChanghoonHyun
+  GitHubBranch:
+    Type: String
+    Default: master
+  GitHubToken:
+    Type: String
+    NoEcho: true
+Resources:
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:*
+                  - iam:ListRoles
+                  - cloudformation:*
+                  - codecommit:List*
+                  - codecommit:Get*
+                  - codecommit:GitPull
+                  - codecommit:UploadArchive
+                  - codecommit:CancelUploadArchive
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - iam:PassRole
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
+                  - lambda:InvokeFunction
+                  - lambda:ListFunctions
+                  - lambda:GetFunctionConfiguration
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetBucketPolicy
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                 - !Sub arn:aws:s3:::${ArtifactBucketName}/*
+                 - !Sub arn:aws:s3:::${ArtifactBucketName}
+          PolicyName: !Sub ${AWS::StackName}-policy-${AWS::Region}
+  BuildProjectRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  BuildProjectPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${AWS::StackName}-CodeBuildPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Sub arn:aws:s3:::${ArtifactBucketName}/*
+             - !Sub arn:aws:s3:::${ArtifactBucketName}/
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      Roles:
+        - !Ref BuildProjectRole
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-BuildProject"
+      Description: !Sub ${AWS::StackName}-buildproject
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Cache:
+        Location: !Sub "${ArtifactBucketName}/cache"
+        Type: S3
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: linuxContainer
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Ref CodeBuildImage
+        EnvironmentVariables:
+          - Name: ArtifactBucketName
+            Value: !Ref ArtifactBucketName
+          - Name: Region
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          cache:
+            paths:
+              - '/root/.m2/**/*'
+          phases:
+            install:
+              commands:
+                   - printenv
+                   - npm install aws-xray-sdk
+            build:
+              commands:
+                - aws cloudformation package --template ./web/backend/template.yaml --s3-bucket ${ArtifactBucketName} --output-template packaged.yaml --region=${Region}
+          artifacts: 
+            files:
+              - packaged.yaml
+      TimeoutInMinutes: 15
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName
+  CodeDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  CodeDeployRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${AWS::StackName}-DeployPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:*
+              - iam:AttachRolePolicy
+              - iam:CreatePolicy
+              - iam:CreateRole
+              - iam:DeleteRole
+              - iam:DeleteRolePolicy
+              - iam:DetachRolePolicy
+              - iam:GetRole
+              - iam:GetRolePolicy
+              - iam:ListRolePolicies
+              - iam:ListRoles
+              - iam:PassRole
+              - iam:PutRolePolicy
+              - cloudformation:*
+              - apigateway:*
+              - cloudwatch:*
+              - codedeploy:*
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Sub arn:aws:s3:::${ArtifactBucketName}/*
+             - !Sub arn:aws:s3:::${ArtifactBucketName}
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - ssm:PutParameter
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource:
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+      Roles:
+        - !Ref CodeDeployRole
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: PipelineRole
+    Properties:
+      RoleArn: !GetAtt PipelineRole.Arn
+      Name: !Ref AWS::StackName
+      Stages:
+        - Name: source-code-checkout
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+              OutputArtifacts:
+                - Name: !Sub '${ServiceName}-Source'
+              RunOrder: 1
+        - Name: build-lambda-function
+          Actions:
+            - Name: build-lambda-function
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref BuildProject
+              RunOrder: 1
+              InputArtifacts:
+                - Name: !Sub '${ServiceName}-Source'
+              OutputArtifacts:
+                - Name: !Sub '${ServiceName}-BuildArtifact'
+        - Name: Deploy
+          Actions:
+            - Name: create-changeset
+              InputArtifacts:
+                - Name: !Sub '${ServiceName}-BuildArtifact'
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              OutputArtifacts: []
+              Configuration:
+                StackName: !Ref ServiceName
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt CodeDeployRole.Arn
+                ChangeSetName: pipeline-changeset
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: !Sub '${ServiceName}-BuildArtifact::${PackagedFile}'
+                ParameterOverrides: !Sub '{"Email" : "${Email}"}'
+              RunOrder: 1
+            - Name: execute-changeset
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              OutputArtifacts: []
+              Configuration:
+                StackName: !Ref ServiceName
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: pipeline-changeset
+              RunOrder: 2
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucketName

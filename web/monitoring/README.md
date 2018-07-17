@@ -152,7 +152,33 @@ const AWS = AWSXRay.captureAWS(require('aws-sdk'));
 ```
 
 ## CloudWatch Alarm
+  - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-southeast-1#alarm:alarmFilter=ANY)로 이동
+  - ![cloudwatch-alarm](/web/monitoring/images/cloudwatch-alarm.png)  
+  - 경보 상태의 기준을 설정하고 경보 상태가 되면 Notification
+  - 측정 간격(Period) 동안 데이터 포인트(EvaluationPeriods) N개 중 M개가 임계값(Threshold)을 초과할 경우 경보를 제공
+    - Period가 60초라면 60초에 DataPoint 1개 생성
+    - 60초동안 1번 이상 5xx 에러가 발생하면 Alarm status로 변경
+```yaml
+  APIGateway5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: UsersApi
+    Properties:
+      AlarmDescription: 5xx alarm for api gateway
+      Namespace: AWS/ApiGateway
+      AlarmActions:
+        - !Ref SnsForAlarm
+      OKActions:
+        - !Ref SnsForAlarm
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref APIGName
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+```  
 
-  - 
-
-- [?](../)
+## 다음 단계
+- [CI/CD Pipeline](../pipeline)

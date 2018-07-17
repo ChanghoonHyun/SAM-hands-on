@@ -145,8 +145,7 @@ Resources:
       DeploymentPreference:
         Type: !Ref DeploymentType
         Alarms:
-          - LambdaAliasErrorMetricGreaterThanZeroAlarm
-          - LambdaErrorMetricGreaterThanZeroAlarm
+          - APIGateway5xxAlarm
   PermissionForAPIGatewayToInvokeLambda:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -173,42 +172,25 @@ Resources:
       Subscription:
         - Endpoint: !Ref Email
           Protocol: email
-  # LambdaAliasErrorMetricGreaterThanZeroAlarm:
-  #   Type: AWS::CloudWatch::Alarm
-  #   Properties:
-  #     AlarmDescription: Lambda Function Error > 0
-  #     ComparisonOperator: GreaterThanThreshold
-  #     Dimensions:
-  #       - Name: Resource
-  #         Value: !Sub "${UsersFunction}:${StageName}"
-  #       - Name: FunctionName
-  #         Value: !Ref UsersFunction
-  #     EvaluationPeriods: 1
-  #     MetricName: Errors
-  #     Namespace: AWS/Lambda
-  #     Period: 60
-  #     Statistic: Sum
-  #     Threshold: 0
-  #     AlarmActions:
-  #       - !Ref SnsForAlarm
-  LambdaErrorMetricGreaterThanZeroAlarm:
+  APIGateway5xxAlarm:
     Type: AWS::CloudWatch::Alarm
+    DependsOn: UsersApi
     Properties:
-      AlarmDescription: Lambda Function Error > 0
-      ComparisonOperator: GreaterThanThreshold
-      Dimensions:
-        - Name: Resource
-          Value: !Ref UsersFunction
-        - Name: FunctionName
-          Value: !Ref UsersFunction
-      EvaluationPeriods: 1
-      MetricName: Errors
-      Namespace: AWS/Lambda
-      Period: 60
-      Statistic: Sum
-      Threshold: 0
+      AlarmDescription: 5xx alarm for api gateway
+      Namespace: AWS/ApiGateway
       AlarmActions:
         - !Ref SnsForAlarm
+      OKActions:
+        - !Ref SnsForAlarm
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref APIGName
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold        
   UsersTable:
     Type: AWS::Serverless::SimpleTable
     Properties:

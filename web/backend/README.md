@@ -168,9 +168,3 @@
 
 ## 다음 단계
 - [AWS Static Web으로 SinglePageApp 만들기](../frontend)
-
-
-<!-- npm install aws-xray-sdk
-npm install winston -->
-
-<!-- npm i aws-xray-sdk-core -->
