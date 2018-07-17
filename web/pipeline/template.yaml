@@ -120,9 +120,6 @@ Resources:
       Name: !Sub "${AWS::StackName}-BuildProject"
       Description: !Sub ${AWS::StackName}-buildproject
       ServiceRole: !GetAtt BuildProjectRole.Arn
-      Cache:
-        Location: !Sub "${ArtifactBucketName}/cache"
-        Type: S3
       Artifacts:
         Type: CODEPIPELINE
       Environment:
@@ -138,17 +135,18 @@ Resources:
         Type: CODEPIPELINE
         BuildSpec: |
           version: 0.2
-          cache:
-            paths:
-              - '/root/.m2/**/*'
           phases:
             install:
               commands:
-                   - printenv
-                   - npm install aws-xray-sdk
+                - pwd
+                - printenv
+                - cd ./web/backend
+                - npm install aws-xray-sdk
             build:
               commands:
-                - aws cloudformation package --template ./web/backend/template.yaml --s3-bucket ${ArtifactBucketName} --output-template packaged.yaml --region=${Region}
+                - pwd
+                - aws cloudformation package --template template.yaml --s3-bucket ${ArtifactBucketName} --output-template packaged.yaml --region=${Region}
+                - ls
           artifacts: 
             files:
               - packaged.yaml
