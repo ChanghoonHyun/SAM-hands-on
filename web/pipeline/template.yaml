@@ -289,3 +289,9 @@ Resources:
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucketName
+  CodeBuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: BuildProject
+    Properties:
+      RetentionInDays: 180
+      LogGroupName: !Sub "/aws/codebuild/${AWS::StackName}-BuildProject"
