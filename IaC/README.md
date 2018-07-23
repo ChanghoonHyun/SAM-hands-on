@@ -4,6 +4,7 @@
 
 - 사람 보다 코드가 정확하다.
 - 리소스를 프로비저닝한다.
+- 문서화가 가능하다.
 - 버전 관리가 가능하다.
 - 지속적인 개선과 배포가 가능하다.
 - 3R 보장
@@ -45,6 +46,30 @@ Resources:
       AutomaticStopTimeMinutes: 60
 # Cloud9에서 사용할 EC2 instance type
       InstanceType: !Ref InstanctType
+```
+
+## AWS CLI
+
+  - 콘솔에서 간편하게 처리 가능
+  - 무료
+
+### Example
+```
+aws cloud9 create-environment-ec2 --name my-demo-env --description "My demonstration development environment." --instance-type t2.micro --subnet-id subnet-1fab8aEX --automatic-stop-time-minutes 60 --owner-arn arn:aws:iam::123456789012:user/MyDemoUser
+```
+
+## Terraform
+
+  - 개발자에게 익숙한 문법 제공
+  - 다양한 클라우드 서비스 지원
+  - Enterprise 지원
+
+### Example
+```
+resource "aws_cloud9_environment_ec2" "example" {
+  instance_type = "t2.micro"
+  name = "example-env"
+}
 ```
 
 ## 다음 단계
