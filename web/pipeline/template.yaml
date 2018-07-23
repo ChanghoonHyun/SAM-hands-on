@@ -33,6 +33,7 @@ Resources:
   PipelineRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-Pipeline
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -50,25 +51,38 @@ Resources:
               - Effect: Allow
                 Action:
                   - codepipeline:*
-                  - iam:ListRoles
                   - cloudformation:*
+                Resource:
+                  - !Sub arn:aws:codepipeline:${AWS::Region}:*:* 
+                  - !Sub arn:aws:cloudformation:${AWS::Region}:*:* 
+              - Effect: Allow
+                Action:
                   - codecommit:List*
                   - codecommit:Get*
                   - codecommit:GitPull
                   - codecommit:UploadArchive
                   - codecommit:CancelUploadArchive
+                Resource: !Sub arn:aws:codecommit:${AWS::Region}:*:*                    
+              - Effect: Allow
+                Action:
                   - codebuild:BatchGetBuilds
                   - codebuild:StartBuild
+                Resource: !Sub arn:aws:codebuild:${AWS::Region}:*:*   
+              - Effect: Allow
+                Action:
+                  - iam:ListRoles
                   - iam:PassRole
-                  - s3:ListAllMyBuckets
-                  - s3:GetBucketLocation
+                Resource: !Sub arn:aws:iam::*:*                           
+              - Effect: Allow
+                Action:
                   - lambda:InvokeFunction
                   - lambda:ListFunctions
                   - lambda:GetFunctionConfiguration
-                Resource:
-                  - "*"
+                Resource: !Sub arn:aws:lambda:${AWS::Region}:*:*
               - Effect: Allow
                 Action:
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketLocation
                   - s3:PutObject
                   - s3:GetBucketPolicy
                   - s3:GetObject
@@ -80,6 +94,7 @@ Resources:
   BuildProjectRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-CodeBuild
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -154,6 +169,7 @@ Resources:
   CodeDeployRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-CodeDeploy
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -174,6 +190,13 @@ Resources:
           - Effect: Allow
             Action:
               - lambda:*
+              - cloudformation:*
+              - apigateway:*
+              - cloudwatch:*
+              - codedeploy:*
+            Resource: "*"        
+          - Effect: Allow
+            Action:
               - iam:AttachRolePolicy
               - iam:CreatePolicy
               - iam:CreateRole
@@ -186,11 +209,7 @@ Resources:
               - iam:ListRoles
               - iam:PassRole
               - iam:PutRolePolicy
-              - cloudformation:*
-              - apigateway:*
-              - cloudwatch:*
-              - codedeploy:*
-            Resource: "*"
+            Resource: !Sub arn:aws:iam::*:*
           - Effect: Allow
             Action:
               - s3:PutObject
@@ -205,14 +224,32 @@ Resources:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
-            Resource: arn:aws:logs:*:*:*
+              - logs:DeleteLogGroup
+              - logs:DeleteLogStream
+              - logs:DescribeLogGroups
+              - logs:PutRetentionPolicy
+            Resource: !Sub arn:aws:logs:${AWS::Region}:*:*
+          - Effect: Allow
+            Action:
+              - sns:CreateTopic
+              - sns:DeleteTopic
+              - sns:GetTopicAttributes
+              - sns:Subscribe
+            Resource: !Sub arn:aws:sns:${AWS::Region}:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:CreateTable
+              - dynamodb:UpdateTable
+              - dynamodb:DeleteTable
+              - dynamodb:DescribeTable
+            Resource: !Sub arn:aws:dynamodb:${AWS::Region}:*:*
           - Effect: Allow
             Action:
               - ssm:PutParameter
               - ssm:GetParameter
               - ssm:GetParameters
             Resource:
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*
+              - !Sub arn:aws:ssm:${AWS::Region}:*:parameter/*
       Roles:
         - !Ref CodeDeployRole
   Pipeline:

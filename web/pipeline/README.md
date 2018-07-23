@@ -16,7 +16,7 @@
   - AWS 리소스를 배포하는 경우 무료
 
 ## CodePipeline
-  - ![code-pipeline](/web/pipeline/images/code-pipeline.png)
+  - ![code-pipeline](/web/pipeline/images/code-pipeline-summary.png)
   - generate github token
     - curl -u {your_Github_id} -d '{"scopes":["public_repo", "repo:status", "repo_deployment"],"note":"for serverless hands on"}' https://api.github.com/authorizations
   ```javascript
@@ -31,4 +31,23 @@
       .......
     }
 ```
-  - aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubUser={your_github_name} GitHubToken={your_github_token}  GitHubRepoBranch=master ArtifactBucketName={your_artifacts_s3}
+
+  - pipeline stack 배포하기
+    - aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubUser={your_github_name} GitHubToken={your_github_token}  GitHubRepoBranch=master ArtifactBucketName={your_artifacts_s3} Email={your_email}
+
+
+  - 생성이 완료되면 아래와 같은 메시지가 나옵니다.
+    ```
+      Waiting for changeset to be created..
+      Waiting for stack create/update to complete
+      Successfully created/updated stack - serverless-hands-on-pipeline
+    ```
+  - [aws console로 이동](https://ap-southeast-1.console.aws.amazon.com/codepipeline/home?region=ap-southeast-1#/view/serverless-hands-on-pipeline)
+  - ![code-pipeline-1](/web/pipeline/images/code-pipeline-1.png)
+  - [aws console로 이동](https://ap-southeast-1.console.aws.amazon.com/codebuild/home?region=ap-southeast-1#/projects/serverless-hands-on-pipeline-BuildProject/view)
+  - ![code-build-main](/web/pipeline/images/code-build-main.png)
+    - build history 클릭
+  - ![code-build-1](/web/pipeline/images/code-build-1.png)
+  - ![code-build-2](/web/pipeline/images/code-build-2.png)
+
+
