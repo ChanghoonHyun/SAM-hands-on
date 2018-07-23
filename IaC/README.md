@@ -25,9 +25,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: cloud9 stack
 # stack에서 사용할 파라미터 정의.
 Parameters:
-  AppName:
-    Type: String
-    Description: Name of the application.
 # CLI 명령어에서 파라미터를 반드시 넣어야 함. ex) --parameter-overrides AppName=serverless-hands-on
   InstanctType: 
     Type: String
@@ -55,7 +52,10 @@ Resources:
 
 ### Example
 ```
-aws cloud9 create-environment-ec2 --name my-demo-env --description "My demonstration development environment." --instance-type t2.micro --subnet-id subnet-1fab8aEX --automatic-stop-time-minutes 60 --owner-arn arn:aws:iam::123456789012:user/MyDemoUser
+aws cloud9 create-environment-ec2 \
+  --name my-demo-env \
+  --instance-type t2.micro \
+  --automatic-stop-time-minutes 60
 ```
 
 ## Terraform
@@ -69,6 +69,7 @@ aws cloud9 create-environment-ec2 --name my-demo-env --description "My demonstra
 resource "aws_cloud9_environment_ec2" "example" {
   instance_type = "t2.micro"
   name = "example-env"
+  automatic_stop_time_minutes = 60
 }
 ```
 
