@@ -9,6 +9,47 @@
   - 빌드 서버 관리가 필요없음
   - 분 단위 과금
   - 다양한 사용 환경 지정
+  ### template
+```yaml
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-BuildProject"
+      Description: !Sub ${AWS::StackName}-buildproject
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: linuxContainer
+        ComputeType: BUILD_GENERAL1_SMALL
+        # aws/codebuild/nodejs:7.0.0
+        Image: !Ref CodeBuildImage
+        EnvironmentVariables:
+          - Name: ArtifactBucketName
+            Value: !Ref ArtifactBucketName
+          - Name: Region
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - printenv
+                - cd ./web/backend
+                - npm install aws-xray-sdk
+            build:
+              commands:
+                - aws cloudformation package --template template.yaml --s3-bucket ${ArtifactBucketName} --output-template packaged.yaml --region=${Region}
+          artifacts: 
+            files:
+              - ./web/backend/packaged.yaml
+      TimeoutInMinutes: 15
+      Tags:
+        - Key: Name
+          Value: !Ref AWS::StackName    
+```
 
 ## CodeDeploy
   - EC2, Lambda 등을 자동 배포
@@ -31,6 +72,83 @@
       .......
     }
 ```
+  ### template
+```yaml
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: PipelineRole
+    Properties:
+      RoleArn: !GetAtt PipelineRole.Arn
+      Name: !Ref AWS::StackName
+      Stages:
+        - Name: source-code-checkout
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              Configuration:
+                Owner: !Ref GitHubOwner
+                Repo: !Ref GitHubRepo
+                Branch: !Ref GitHubBranch
+                OAuthToken: !Ref GitHubToken
+              OutputArtifacts:
+                - Name: !Sub '${ServiceName}-Source'
+              RunOrder: 1
+        - Name: build-lambda-function
+          Actions:
+            - Name: build-lambda-function
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref BuildProject
+              RunOrder: 1
+              InputArtifacts:
+                - Name: !Sub '${ServiceName}-Source'
+              OutputArtifacts:
+                - Name: !Sub '${ServiceName}-BuildArtifact'
+        - Name: Deploy
+          Actions:
+            - Name: create-changeset
+              InputArtifacts:
+                - Name: !Sub '${ServiceName}-BuildArtifact'
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              OutputArtifacts: []
+              Configuration:
+                StackName: !Ref ServiceName
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt CodeDeployRole.Arn
+                ChangeSetName: pipeline-changeset
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: !Sub '${ServiceName}-BuildArtifact::web/backend/${PackagedFile}'
+                ParameterOverrides: !Sub '{"Email" : "${Email}"}'
+              RunOrder: 1
+            - Name: execute-changeset
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              OutputArtifacts: []
+              Configuration:
+                StackName: !Ref ServiceName
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: pipeline-changeset
+              RunOrder: 2
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucketName
+```  
 
   - pipeline stack 배포하기
     - aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubUser={your_github_name} GitHubToken={your_github_token}  GitHubRepoBranch=master ArtifactBucketName={your_artifacts_s3} Email={your_email}
