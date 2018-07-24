@@ -15,3 +15,4 @@
 4. [AWS Static Web으로 SinglePageApp 운영하기](./web/frontend)
 5. [CloudWatch와 X-Ray로 모니터링 하기](./web/monitoring)
 6. [CodePipeline으로 CI/CD 구축하기](./web/pipeline)
+7. [리소스 제거하기](./clean)

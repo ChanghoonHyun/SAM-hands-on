@@ -14,23 +14,48 @@
 패키지를 빌드 후 생성된 아티팩트를 올릴 S3를 먼저 생성하겠습니다.
 - ~/environment $ cd ~/environment/SAM-hands-on/web/artifacts-bucket
 - ~/environment/SAM-hands-on/web/artifacts-bucket $ aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-artifacts-bucket --capabilities CAPABILITY_IAM --region=ap-southeast-1
+- 아래와 같이 생성에 성공했다는 메시지가 나올때 까지 기다립니다.
+```
+Successfully created/updated stack - serverless-hands-on-artifacts-bucket
+```
 - [aws console](https://s3.console.aws.amazon.com/s3/buckets/?region=ap-southeast-1)로 가보면 serverless-hands-on-artifacts-{AccountId}-{Region} 형식으로 생성된 S3 Bucket을 확인 할 수 있습니다.
+- 생성된 S3 Bucket 이름을 변수로 지정합니다.
+```
+export ARTIFACTS_S3={your_bucket_name}
+```
 
 ## 서버 배포하기
 
 - ~/environment/SAM-hands-on/web/artifacts-bucket $ cd ~/environment/SAM-hands-on/web/backend
 -  API Server를 수동으로 배포하겠습니다. 위에서 생성한 S3 이름과 장애 알람을 받을 email 주소를 입력해야 합니다.
-  - ~/environment/SAM-hands-on/web/backend $ . deploy.sh {artifact-bucket-name} {your@email.com}
+```
+export SNS_EMAIL={you@email.com}
+```
+  - ~/environment/SAM-hands-on/web/backend $ aws cloudformation package \
+  --template template.yaml \
+  --s3-bucket $ARTIFACTS_S3 \
+  --output-template packaged.yaml \
+  --region=ap-southeast-1
+  - ~/environment/SAM-hands-on/web/backend $ aws cloudformation deploy \
+  --region ap-southeast-1 \
+  --template-file ./packaged.yaml \
+  --stack-name serverless-hands-on-api-server \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+  Email=$SNS_EMAIL
 - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1)에서 serverless-hands-on-api-server stack이 생성된것을 확인 할 수 있습니다.
 
 ## local 실행
 
+- ~/environment/SAM-hands-on/web/backend $ npm i aws-xray-sdk
 - ~/environment/SAM-hands-on/web/backend $ sam local start-api --port 3000
 - test
   - cloud9에서 새로운 terminal 오픈
 ![new terminal](/web/backend/images/c9-terminal.png)
   - ~/environment $ curl --request POST --header 'Content-Type: application/json' --data '{"name":"test"}' http://127.0.0.1:3000/users
-  - ~/environment $ curl --request GET http://127.0.0.1:3000/users
+  - ~/environment $ curl --request GET http://127.0.0.1:3000/
+- sam local을 실행한 터미널을 종료합니다.
+  - control + c
 
 ### API Gateway
 

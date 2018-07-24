@@ -22,7 +22,6 @@ Parameters:
     Default: SAM-hands-on
   GitHubOwner:
     Type: String
-    Default: ChanghoonHyun
   GitHubBranch:
     Type: String
     Default: master

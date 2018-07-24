@@ -16,6 +16,7 @@ SPA는 처음 접속할때만 서버에 html과 js를 요청하고 이후 부터
 ```yaml
   WebBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub serverless-hands-on-static-web-${AWS::AccountId}-${AWS::Region}
       WebsiteConfiguration:
@@ -37,8 +38,10 @@ SPA는 처음 접속할때만 서버에 html과 js를 요청하고 이후 부터
 ```
 
 ## Bucket에 SPA App 배포하기
-
-- ~/environment/SAM-hands-on/web/frontend $ aws s3 sync ./pkg s3://{static-web-s3-name}
+```
+export STATIC_WEB_S3={your_bucket_name}
+```
+- ~/environment/SAM-hands-on/web/frontend $ aws s3 sync ./pkg s3://$STATIC_WEB_S3
 
 ## 웹 페이지 테스트 해보기
 

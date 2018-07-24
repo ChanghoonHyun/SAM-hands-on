@@ -58,21 +58,8 @@
 
 ## CodePipeline
   - ![code-pipeline](/web/pipeline/images/code-pipeline-summary.png)
-  - generate github token
-    - curl -u {your_Github_id} -d '{"scopes":["public_repo", "repo:status", "repo_deployment"],"note":"for serverless hands on"}' https://api.github.com/authorizations
-  ```javascript
-    {
-      ....
-      "app": {
-        "name": "for serverless hands on",
-        "url": "https://developer.github.com/v3/oauth_authorizations/",
-        "client_id": "00000000000000000000"
-      },
-      "token": {your_github_token},
-      .......
-    }
-```
-  ### template
+
+### pipeline stack 살펴보기
 ```yaml
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -148,10 +135,29 @@
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucketName
-```  
+```    
+  - generate github token
+    - curl -u {your_Github_id} -d '{"scopes":["public_repo", "repo:status", "repo_deployment"],"note":"for serverless hands on"}' https://api.github.com/authorizations
+    - 성공하면 아래와 같이 생성된 토큰 정보를 반환합니다.
+```javascript
+    {
+      ....
+      "app": {
+        "name": "for serverless hands on",
+        "url": "https://developer.github.com/v3/oauth_authorizations/",
+        "client_id": "00000000000000000000"
+      },
+      "token": {your_github_token},
+      .......
+    }
+```
+```
+  export GITHUB_TOKEN={your_github_token}
+```
 
   - pipeline stack 배포하기
-    - aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubUser={your_github_name} GitHubToken={your_github_token}  GitHubRepoBranch=master ArtifactBucketName={your_artifacts_s3} Email={your_email}
+    - ~/environment/SAM-hands-on/web/frontend $ cd ~/environment/SAM-hands-on/web/pipeline
+    - ~/environment/SAM-hands-on/web/pipeline $ aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubOwner={your_github_name} GitHubToken=$GITHUB_TOKEN  GitHubRepoBranch=master ArtifactBucketName=$ARTIFACTS_S3 Email=$SNS_EMAIL
 
 
   - 생성이 완료되면 아래와 같은 메시지가 나옵니다.

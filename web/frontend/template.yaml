@@ -2,6 +2,7 @@ Description: static web site template
 Resources:
   WebBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub serverless-hands-on-static-web-${AWS::AccountId}-${AWS::Region}
       WebsiteConfiguration:
