@@ -9,7 +9,7 @@
 
 ## S3 버킷 삭제
 
-## S3 버킷 삭제
+## SNS Subscription 삭제
 
 ## github access token 삭제
 

@@ -79,6 +79,17 @@ const AWS = AWSXRay.captureAWS(require('aws-sdk'));
   ![x-ray-traces-1](/web/monitoring/images/x-ray-traces-1.png)
   ![x-ray-traces-2](/web/monitoring/images/x-ray-traces-2.png)  
 
+## CloudWatch Logs
+  - agent를 통해서 로그를 수집하고 로그에 엑세스 합니다.
+  - ![cloudwatch-logs](/web/monitoring/images/cloudwatch-logs.png)
+    - RequestId : 요청을 추적하기 위해 할당된 id
+    - Duration : 람다가 실행된 시간
+    - Billed Duration : Duration을 100ms 단위로 올림한 과금용 시간
+    - Memory Size : 람다에 할당된 메모리
+    - Max Memory Used : 사용한 메모리 사이즈
+  - [필터 패턴](https://docs.aws.amazon.com/ko_kr/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html)을 통한 검색
+
+
 ## CloudWatch Metrics
   - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-southeast-1#dashboards:name=HandsOnAPIG)로 이동
   - 5xx와 Latency에 대한 Metrics를 대시보드로 만들었습니다.

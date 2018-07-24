@@ -31,18 +31,22 @@ export ARTIFACTS_S3={your_bucket_name}
 ```
 export SNS_EMAIL={you@email.com}
 ```
-  - ~/environment/SAM-hands-on/web/backend $ aws cloudformation package \
+```
+~/environment/SAM-hands-on/web/backend $ aws cloudformation package \
   --template template.yaml \
   --s3-bucket $ARTIFACTS_S3 \
   --output-template packaged.yaml \
   --region=ap-southeast-1
-  - ~/environment/SAM-hands-on/web/backend $ aws cloudformation deploy \
+```  
+```
+~/environment/SAM-hands-on/web/backend $ aws cloudformation deploy \
   --region ap-southeast-1 \
   --template-file ./packaged.yaml \
   --stack-name serverless-hands-on-api-server \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
   Email=$SNS_EMAIL
+```  
 - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1)에서 serverless-hands-on-api-server stack이 생성된것을 확인 할 수 있습니다.
 
 ## local 실행
