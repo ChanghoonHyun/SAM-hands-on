@@ -174,4 +174,7 @@
   - ![code-build-1](/web/pipeline/images/code-build-1.png)
   - ![code-build-2](/web/pipeline/images/code-build-2.png)
 
+  ## 다음 단계
+- [리소스 제거하기](../../clean)
+
 
