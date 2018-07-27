@@ -153,11 +153,12 @@
 ```
 ```
   export GITHUB_TOKEN={your_github_token}
+  export GITHUB_NAME={your_github_name}
 ```
 
   - pipeline stack 배포하기
     - ~/environment/SAM-hands-on/web/frontend $ cd ~/environment/SAM-hands-on/web/pipeline
-    - ~/environment/SAM-hands-on/web/pipeline $ aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubOwner={your_github_name} GitHubToken=$GITHUB_TOKEN  GitHubRepoBranch=master ArtifactBucketName=$ARTIFACTS_S3 Email=$SNS_EMAIL
+    - ~/environment/SAM-hands-on/web/pipeline $ aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-pipeline  --capabilities CAPABILITY_NAMED_IAM --parameter-overrides GitHubRepoName=SAM-hands-on GitHubOwner=$GITHUB_NAME GitHubToken=$GITHUB_TOKEN  GitHubRepoBranch=master ArtifactBucketName=$ARTIFACTS_S3 Email=$SNS_EMAIL
 
 
   - 생성이 완료되면 아래와 같은 메시지가 나옵니다.
