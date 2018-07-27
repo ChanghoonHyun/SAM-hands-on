@@ -1,11 +1,13 @@
 # template 삭제
 
-## 순서대로 제거하세요
-  1. aws cloudformation delete-stack --stack-name serverless-hands-on-static-web
-  2. aws cloudformation delete-stack --stack-name delete-stack --stack-name serverless-hands-on-static-web
-  3. aws cloudformation delete-stack --stack-name serverless-hands-on-api-server
-  4. aws cloudformation delete-stack --stack-name serverless-hands-on-pipeline
-  5. aws cloudformation delete-stack --stack-name serverless-hands-on-artifacts-bucket
+## 스택이 완전히 제거 될 때 까지 기다리면서 순서대로 진행하세요.
+  - [aws console로 이동](https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks?filter=active&tab=outputs)
+  - 
+    1. aws cloudformation delete-stack --stack-name serverless-hands-on-static-web
+    2. aws cloudformation delete-stack --stack-name delete-stack --stack-name serverless-hands-on-static-web
+    3. aws cloudformation delete-stack --stack-name serverless-hands-on-api-server
+    4. aws cloudformation delete-stack --stack-name serverless-hands-on-pipeline
+    5. aws cloudformation delete-stack --stack-name serverless-hands-on-artifacts-bucket
 
 ## S3 버킷 삭제
   - S3는 Bucket에 컨텐츠가 있으면 자동으로 삭제할 수 없습니다. 수동으로 삭제 해주세요.
