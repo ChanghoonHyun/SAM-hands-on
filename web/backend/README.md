@@ -24,6 +24,18 @@ Successfully created/updated stack - serverless-hands-on-artifacts-bucket
 export ARTIFACTS_S3={your_bucket_name}
 ```
 
+## local 실행
+
+- ~/environment/SAM-hands-on/web/backend $ npm i aws-xray-sdk
+- ~/environment/SAM-hands-on/web/backend $ sam local start-api --port 3000
+- test
+  - cloud9에서 새로운 terminal 오픈
+![new terminal](/web/backend/images/c9-terminal.png)
+  - ~/environment $ curl --request POST --header 'Content-Type: application/json' --data '{"name":"test"}' http://127.0.0.1:3000/users
+  - ~/environment $ curl --request GET http://127.0.0.1:3000/users
+- sam local을 실행한 터미널을 종료합니다.
+  - control + c
+
 ## 서버 배포하기
 
 - ~/environment/SAM-hands-on/web/artifacts-bucket $ cd ~/environment/SAM-hands-on/web/backend
@@ -48,18 +60,6 @@ export SNS_EMAIL={you@email.com}
   Email=$SNS_EMAIL
 ```  
 - [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1)에서 serverless-hands-on-api-server stack이 생성된것을 확인 할 수 있습니다.
-
-## local 실행
-
-- ~/environment/SAM-hands-on/web/backend $ npm i aws-xray-sdk
-- ~/environment/SAM-hands-on/web/backend $ sam local start-api --port 3000
-- test
-  - cloud9에서 새로운 terminal 오픈
-![new terminal](/web/backend/images/c9-terminal.png)
-  - ~/environment $ curl --request POST --header 'Content-Type: application/json' --data '{"name":"test"}' http://127.0.0.1:3000/users
-  - ~/environment $ curl --request GET http://127.0.0.1:3000/users
-- sam local을 실행한 터미널을 종료합니다.
-  - control + c
 
 ### API Gateway
 
