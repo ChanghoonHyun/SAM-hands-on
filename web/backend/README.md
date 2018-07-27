@@ -26,6 +26,7 @@ export ARTIFACTS_S3={your_bucket_name}
 
 ## local 실행
 
+- ~/environment/SAM-hands-on/web/artifacts-bucket $ cd ~/environment/SAM-hands-on/web/backend
 - ~/environment/SAM-hands-on/web/backend $ npm i aws-xray-sdk
 - ~/environment/SAM-hands-on/web/backend $ sam local start-api --port 3000
 - test
@@ -38,7 +39,6 @@ export ARTIFACTS_S3={your_bucket_name}
 
 ## 서버 배포하기
 
-- ~/environment/SAM-hands-on/web/artifacts-bucket $ cd ~/environment/SAM-hands-on/web/backend
 -  API Server를 수동으로 배포하겠습니다. 위에서 생성한 S3 이름과 장애 알람을 받을 email 주소를 입력해야 합니다.
 ```
 export SNS_EMAIL={you@email.com}
