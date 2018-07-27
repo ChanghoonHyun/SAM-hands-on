@@ -3,7 +3,7 @@
 ## CI(Continuous Integration)/CD(Continuous Deployment)
   - 자동으로 소스코드를 통합해서 테스트하고 배포 합니다.
   - 반복개발을 위한 CI/CD Pieline
-  - ![ci-cd-intro](images/CI-CD-intro.png)
+  ![ci-cd-intro](images/CI-CD-intro.png)
 
 ## CodeBuild
   - 빌드 서버 관리가 필요없음

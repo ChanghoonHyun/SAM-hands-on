@@ -49,7 +49,7 @@ cloudformation deploy \
 > `serverless-hands-on-static-web-{AccountId}-{Region}`
 
 ```bash
-~/environment/SAM-hands-on/web/frontend (master) $ export STATIC_WEB_S3={your_bucket_name}
+~/environment/SAM-hands-on/web/frontend (master) $ export STATIC_WEB_S3=생성한 버켓 이름
 ~/environment/SAM-hands-on/web/frontend (master) $ aws s3 sync ./pkg s3://$STATIC_WEB_S3
 ```
 

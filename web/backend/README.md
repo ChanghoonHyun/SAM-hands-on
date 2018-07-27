@@ -31,7 +31,7 @@
 
 3. [S3 Console](https://s3.console.aws.amazon.com/s3/buckets/)을 보면 아래와 같은 이름 형식으로 S3 Bucket 이 생성되었음을 알 수 있습니다.
 
-> `serverless-hands-on-artifacts-{AccountId}-{Region}`
+    > `serverless-hands-on-artifacts-{AccountId}-{Region}`
 
 4. 생성된 S3 Bucket 이름을 변수로 지정합니다.
 
