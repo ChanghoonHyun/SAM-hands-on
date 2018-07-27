@@ -53,13 +53,13 @@ export STATIC_WEB_S3={your_bucket_name}
 ![s3-web-url](/web/frontend/images/s3-web-url.png)
 
 - 사용자 추가
-  1. {api-gateway-url/test} 입력
+  1. {api-gateway-url/prod} 입력
   2. name, address 추가, 등록 클릭
   3. 성공 alert 확인
 ![add-user](/web/frontend/images/add-user.png)
 
 - 사용자 조회
-  1. {api-gateway-url/test} 입력
+  1. {api-gateway-url/prod} 입력
   2. 사용자 조회 클릭
 ![find-users](/web/frontend/images/find-users.png)  
 

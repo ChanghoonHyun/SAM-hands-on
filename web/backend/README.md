@@ -57,7 +57,7 @@ export SNS_EMAIL={you@email.com}
   - cloud9에서 새로운 terminal 오픈
 ![new terminal](/web/backend/images/c9-terminal.png)
   - ~/environment $ curl --request POST --header 'Content-Type: application/json' --data '{"name":"test"}' http://127.0.0.1:3000/users
-  - ~/environment $ curl --request GET http://127.0.0.1:3000/
+  - ~/environment $ curl --request GET http://127.0.0.1:3000/users
 - sam local을 실행한 터미널을 종료합니다.
   - control + c
 
