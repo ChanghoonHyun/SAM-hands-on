@@ -7,11 +7,16 @@ SPA는 처음 접속할때만 서버에 html과 js를 요청하고 이후 부터
 
 ## Public S3 Bucket 만들기
 
-- ~/environment/SAM-hands-on/web/backend $ cd ~/environment/SAM-hands-on/web/frontend
-- ~/environment/SAM-hands-on/web/frontend $ aws cloudformation deploy --template-file ./template.yaml --stack-name serverless-hands-on-static-web --capabilities CAPABILITY_IAM  --region=ap-southeast-1
-- [aws console](https://s3.console.aws.amazon.com/s3/home?region=ap-southeast-1)에서 생성된 bucket을 확인 할 수 있습니다.
+```bash
+~/environment/SAM-hands-on/web/backend (master) $ cd ~/environment/SAM-hands-on/web/frontend
+~/environment/SAM-hands-on/web/frontend (master) $ aws \
+cloudformation deploy \
+--template-file template.yaml \
+--stack-name serverless-hands-on-static-web \
+--capabilities CAPABILITY_IAM
+```
 
-### template
+### template 살펴보기
 
 ```yaml
   WebBucket:
@@ -38,30 +43,35 @@ SPA는 처음 접속할때만 서버에 html과 js를 요청하고 이후 부터
 ```
 
 ## Bucket에 SPA App 배포하기
+
+- [S3 Console](https://s3.console.aws.amazon.com)에서 다음 이름 형식으로 생성된 S3 bucket을 확인 할 수 있습니다.
+
+> `serverless-hands-on-static-web-{AccountId}-{Region}`
+
+```bash
+~/environment/SAM-hands-on/web/frontend (master) $ export STATIC_WEB_S3=생성한 버켓 이름
+~/environment/SAM-hands-on/web/frontend (master) $ aws s3 sync ./pkg s3://$STATIC_WEB_S3
 ```
-export STATIC_WEB_S3={your_bucket_name}
-```
-- ~/environment/SAM-hands-on/web/frontend $ aws s3 sync ./pkg s3://$STATIC_WEB_S3
 
 ## 웹 페이지 테스트 해보기
 
-- [aws console](https://ap-southeast-1.console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks?filter=active&tab=outputs)으로 이동
-  1. serverless-hands-on-static-web 클릭
-  2. Outputs 클릭 
-  3. WebUrl의 Value를 복사
+- [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks?filter=active&tab=outputs)으로 이동
+  1. `serverless-hands-on-static-web` 클릭
+  2. `Outputs` 클릭 
+  3. `WebUrl의 Value`를 복사
   4. 브라우저에 입력
-![s3-web-url](/web/frontend/images/s3-web-url.png)
+    ![s3-web-url](images/s3-web-url.png)
 
 - 사용자 추가
-  1. {api-gateway-url/prod} 입력
+  1. {api-gateway-url/prod} 입력(앞서 이야기한 APIGateway 에 `Invoke URL` 을 말합니다)
   2. name, address 추가, 등록 클릭
   3. 성공 alert 확인
-![add-user](/web/frontend/images/add-user.png)
+    ![add-user](images/add-user.png)
 
 - 사용자 조회
-  1. {api-gateway-url/prod} 입력
+  1. {api-gateway-url/prod} 입력(앞서 이야기한 APIGateway 에 `Invoke URL` 을 말합니다)
   2. 사용자 조회 클릭
-![find-users](/web/frontend/images/find-users.png)  
+    ![find-users](images/find-users.png)  
 
 ## 다음 단계
 
