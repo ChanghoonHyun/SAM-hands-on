@@ -37,7 +37,11 @@ CI/CD 를 위해 `본인 계정`으로 핸즈온 리파지터리를 `fork` 하�
 1. Git 환경을 설정합니다
 
     ```bash
+    # 이메일에는 따옴표를 넣지 않습니다.
+    # i.e. export GITHUB_EMAIL=abc@email.com
     ec2-user:~/environment $ export GITHUB_EMAIL=본인의 깃헙에 사용한 이메일
+    # 이름은 이름에 빈공간이 있을 때에 따옴표를 넣습니다.
+    # i.e. export MY_NAME="HONG GILDONG"
     ec2-user:~/environment $ export MY_NAME=본인의 이름
     ec2-user:~/environment $ export GITHUB_ACCOUNT=본인의 깃헙 계정
     ec2-user:~/environment $ git config --global user.name $MY_NAME
