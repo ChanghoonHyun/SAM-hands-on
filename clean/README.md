@@ -3,13 +3,13 @@
 ## CloudFront template 삭제
 
 > 주의: 스택이 완전히 제거 될 때 까지 기다리면서 순서대로 진행하세요.
-- [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks?filter=active&tab=outputs)로 이동 후 다음명령어를 수행하세요.
+- [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks?filter=active&tab=outputs)로 이동 후 다음 스택을 제거하세요
 
   ```bash
-  aws cloudformation delete-stack --stack-name serverless-hands-on-static-web
-  aws cloudformation delete-stack --stack-name serverless-hands-on-api-server
-  aws cloudformation delete-stack --stack-name serverless-hands-on-pipeline
-  aws cloudformation delete-stack --stack-name serverless-hands-on-artifacts-bucket
+  serverless-hands-on-static-web
+  serverless-hands-on-api-server
+  serverless-hands-on-pipeline
+  serverless-hands-on-artifacts-bucket
   # 삭제 되었는지 기다리며 확인합니다.
   ```
 
