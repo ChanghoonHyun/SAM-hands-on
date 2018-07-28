@@ -22,7 +22,7 @@
 
 ## Github
 
-CI/CD 를 위해 `본인 계정`으로 핸즈온 리파지터리를 `fork` 하요 사용하겠습니다.
+CI/CD 를 위해 `본인 계정`으로 핸즈온 리파지터리를 `fork` 사용하겠습니다.
 
 1. https://github.com/ChanghoonHyun/SAM-hands-on 로 이동
 2. `fork` 클릭

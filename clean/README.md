@@ -7,7 +7,6 @@
 
   ```bash
   aws cloudformation delete-stack --stack-name serverless-hands-on-static-web
-  aws cloudformation delete-stack --stack-name delete-stack --stack-name serverless-hands-on-static-web
   aws cloudformation delete-stack --stack-name serverless-hands-on-api-server
   aws cloudformation delete-stack --stack-name serverless-hands-on-pipeline
   aws cloudformation delete-stack --stack-name serverless-hands-on-artifacts-bucket
